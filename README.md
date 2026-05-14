@@ -26,7 +26,6 @@ exp-roles/
 | delivery-director | 交付总监 | coordinator | lead |
 | architect | 架构师 | executor | specialist |
 | fullstack-engineer | 全栈工程师 | executor | specialist |
-| tester | 测试工程师 | observer | specialist |
 | git-workflow-expert | Git工作流专家 | executor | specialist |
 
 ## 快速开始
