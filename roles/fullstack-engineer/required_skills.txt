@@ -1,0 +1,4 @@
+test-driven-development
+writing-plans
+systematic-debugging
+requesting-code-review

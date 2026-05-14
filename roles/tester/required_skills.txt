@@ -1,0 +1,2 @@
+verification-before-completion
+test-driven-development
