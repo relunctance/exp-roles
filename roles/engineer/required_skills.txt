@@ -1,0 +1,4 @@
+# 必需的 skills 列表
+test-driven-development  # source: superpowers
+writing-plans  # source: superpowers
+systematic-debugging  # source: superpowers

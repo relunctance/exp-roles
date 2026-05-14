@@ -1,0 +1,29 @@
+name: engineer
+display_name: 工程师
+description: 负责功能实现和代码编写，是团队的主要执行者
+
+attributes:
+  type: executor
+  tier: specialist
+
+skills:
+  required:
+    - name: test-driven-development
+      source: superpowers
+    - name: writing-plans
+      source: superpowers
+    - name: systematic-debugging
+      source: superpowers
+  optional:
+    - name: requesting-code-review
+      source: superpowers
+    - name: verification-before-completion
+      source: superpowers
+
+applicable_phases:
+  - execute
+
+capabilities:
+  - 实现功能代码
+  - TDD 测试驱动开发
+  - 遵循代码规范
