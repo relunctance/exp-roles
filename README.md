@@ -1,6 +1,6 @@
 # Exp Roles
 
-AI Agent 角色定义库。
+AI Agent 角色定义库 — 与 AI 协同打磨角色，持续进化。
 
 ## 目录结构
 
