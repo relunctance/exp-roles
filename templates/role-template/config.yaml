@@ -1,0 +1,21 @@
+name: my-role
+display_name: 我的角色
+description: 角色描述，简要说明角色的定位和核心价值
+
+attributes:
+  type: executor                # executor | reviewer | coordinator | observer
+  tier: specialist              # specialist | generalist | lead
+
+skills:
+  required:
+    - skill-name-1              # 必需的 skills（与 required_skills.txt 保持一致）
+    - skill-name-2
+  optional:
+    - skill-name-3              # 可选的 skills
+
+applicable_phases:
+  - execute                     # plan | design | execute | review | verify | release
+
+capabilities:
+  - 能力描述1
+  - 能力描述2

@@ -111,7 +111,7 @@ skill-name-2
 | display_name | string | 是 | 人类可读的显示名称 |
 | description | string | 否 | 角色的详细描述 |
 | attributes | object | 否 | 角色属性配置 |
-| skills | object | 否 | 技能要求配置 |
+| skills | object | **是** | 技能要求配置（必须包含 required 子字段） |
 | applicable_phases | array | 否 | 适用的流程阶段列表 |
 | capabilities | array | 否 | 角色能力列表 |
 
@@ -126,7 +126,7 @@ skill-name-2
 
 | 字段 | 类型 | 必须 | 说明 |
 |------|------|------|------|
-| required | array | 是 | 必须安装的 skills 列表 |
+| required | array | **是** | 必须安装的 skills 列表（与 required_skills.txt 保持一致） |
 | optional | array | 否 | 可选的 skills 列表 |
 
 ### applicable_phases 可选值

@@ -229,7 +229,7 @@ cp -r templates/role-template roles/new-role/
 - 写 `SKILL.md` 的框架
 
 ### 3. 在团队中测试
-- 用 `spawn_team.py` 启动包含新角色的团队
+- 用 [Expert Teams](https://github.com/relunctance/expert-teams) 的 `spawn_team.py` 启动包含新角色的团队
 - 观察角色行为是否符合预期
 
 ### 4. 收集反馈

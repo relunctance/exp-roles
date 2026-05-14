@@ -3,7 +3,7 @@
   "title": "RoleConfig",
   "description": "Exp Roles 角色定义 schema",
   "type": "object",
-  "required": ["name", "display_name"],
+  "required": ["name", "display_name", "skills"],
   "additionalProperties": false,
   "properties": {
     "name": {
@@ -39,6 +39,7 @@
     "skills": {
       "type": "object",
       "description": "技能要求配置",
+      "required": ["required"],
       "additionalProperties": false,
       "properties": {
         "required": {

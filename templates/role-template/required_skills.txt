@@ -1,0 +1,6 @@
+# 必需的 skills 列表
+# 每行一个 skill 名称，必须与 config.yaml 中 skills.required 保持一致
+# 只能包含小写字母、数字、连字符、点和下划线
+# 以 # 开头的行是注释，空行会被忽略
+skill-name-1
+skill-name-2
