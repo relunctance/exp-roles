@@ -14,6 +14,15 @@ Exp Roles 是一个用于定义 AI Agent 角色的规范。每个角色有明确
 
 角色属性定义了角色的基本特征和行为方式。
 
+### Skill 来源（Skill Source）
+
+每个 skill 必须声明其来源类型，目前支持：
+
+| source | 说明 | 安装方式 |
+|--------|------|----------|
+| `superpowers` | 来自 [Superpowers](https://github.com/obra/superpowers) 生态 | `git clone` 仓库后加载 |
+| `git` | 来自外部 Git 仓库 | 通过 `url` 字段指定的地址 `git clone` |
+
 ## 目录结构
 
 ```
@@ -46,13 +55,17 @@ attributes:
   type: executor              # executor | reviewer | coordinator | observer
   tier: specialist            # specialist | generalist | lead
 
-# 技能要求
+# 技能要求（每个 skill 是对象，包含 name、source 和可选的 url）
 skills:
   required:
-    - skill-name-1
-    - skill-name-2
+    - name: writing-plans
+      source: superpowers
+    - name: my-custom-skill
+      source: git
+      url: https://github.com/xxx/my-custom-skill
   optional:
-    - skill-name-3
+    - name: systematic-debugging
+      source: superpowers
 
 # 适用的流程阶段
 applicable_phases:
@@ -70,10 +83,12 @@ capabilities:
 
 ```
 # 必需的 skills 列表
-# 每行一个 skill 名称
-skill-name-1
-skill-name-2
+# 格式: skill-name  # source: superpowers | git [url: https://...]
+writing-plans  # source: superpowers
+my-custom-skill  # source: git url: https://github.com/xxx/my-custom-skill
 ```
+
+> **注意**: `required_skills.txt` 中的 skill name 列表必须与 `config.yaml` 中 `skills.required` 的 name 完全一致。
 
 ### SKILL.md
 
@@ -92,7 +107,7 @@ skill-name-2
 
 描述角色如何工作。
 
-## 与其他角色的协作
+## 协作方式
 
 描述角色与其他角色的协作方式。
 
@@ -126,8 +141,18 @@ skill-name-2
 
 | 字段 | 类型 | 必须 | 说明 |
 |------|------|------|------|
-| required | array | **是** | 必须安装的 skills 列表（与 required_skills.txt 保持一致） |
-| optional | array | 否 | 可选的 skills 列表 |
+| required | array | **是** | 必须安装的 skills 列表（每个 skill 为对象格式，与 required_skills.txt 保持一致） |
+| optional | array | 否 | 可选的 skills 列表（每个 skill 为对象格式） |
+
+### skill 对象字段
+
+每个 skill 项是一个对象，包含以下字段：
+
+| 字段 | 类型 | 必须 | 说明 |
+|------|------|------|------|
+| name | string | 是 | skill 名称，只能包含小写字母、数字、连字符、点和下划线 |
+| source | string | 是 | skill 来源：`superpowers` 或 `git` |
+| url | string | 条件必须 | 当 source 为 `git` 时必须提供，指定 Git 仓库克隆地址 |
 
 ### applicable_phases 可选值
 
@@ -188,9 +213,13 @@ attributes:
 
 skills:
   required:
-    - writing-plans
+    - name: writing-plans
+      source: superpowers
   optional:
-    - systematic-debugging
+    - name: systematic-debugging
+      source: superpowers
+    - name: brainstorming
+      source: superpowers
 
 applicable_phases:
   - plan
@@ -217,10 +246,13 @@ attributes:
 
 skills:
   required:
-    - writing-plans
-    - brainstorming
+    - name: writing-plans
+      source: superpowers
+    - name: brainstorming
+      source: superpowers
   optional:
-    - systematic-debugging
+    - name: systematic-debugging
+      source: superpowers
 
 applicable_phases:
   - plan
@@ -230,6 +262,40 @@ capabilities:
   - 设计系统架构
   - 做技术决策
   - 评审代码架构
+```
+
+### git-workflow-expert（Git工作流专家）
+
+```yaml
+# config.yaml
+name: git-workflow-expert
+display_name: Git工作流专家
+description: 专注于 Git 版本控制和团队协作流程
+
+attributes:
+  type: executor
+  tier: specialist
+
+skills:
+  required:
+    - name: systematic-debugging
+      source: superpowers
+    - name: verification-before-completion
+      source: superpowers
+  optional:
+    - name: writing-plans
+      source: superpowers
+
+applicable_phases:
+  - execute
+  - review
+  - verify
+  - release
+
+capabilities:
+  - Git 仓库初始化与配置管理
+  - 多平台认证配置
+  - 分支策略设计与实施
 ```
 
 ## 贡献指南

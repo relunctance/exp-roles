@@ -8,10 +8,13 @@ attributes:
 
 skills:
   required:
-    - writing-plans
+    - name: writing-plans
+      source: superpowers
   optional:
-    - systematic-debugging
-    - brainstorming
+    - name: systematic-debugging
+      source: superpowers
+    - name: brainstorming
+      source: superpowers
 
 applicable_phases:
   - plan

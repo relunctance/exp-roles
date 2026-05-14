@@ -1,2 +1,4 @@
-systematic-debugging
-verification-before-completion
+# 必需的 skills 列表
+# 格式: skill-name  # source: superpowers | git
+systematic-debugging  # source: superpowers
+verification-before-completion  # source: superpowers

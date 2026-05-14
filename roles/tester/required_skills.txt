@@ -1,2 +1,4 @@
-verification-before-completion
-test-driven-development
+# 必需的 skills 列表
+# 格式: skill-name  # source: superpowers | git
+verification-before-completion  # source: superpowers
+test-driven-development  # source: superpowers

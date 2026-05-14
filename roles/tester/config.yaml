@@ -8,10 +8,13 @@ attributes:
 
 skills:
   required:
-    - verification-before-completion
-    - test-driven-development
+    - name: verification-before-completion
+      source: superpowers
+    - name: test-driven-development
+      source: superpowers
   optional:
-    - systematic-debugging
+    - name: systematic-debugging
+      source: superpowers
 
 applicable_phases:
   - verify

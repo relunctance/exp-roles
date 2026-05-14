@@ -1,2 +1,4 @@
-writing-plans
-brainstorming
+# 必需的 skills 列表
+# 格式: skill-name  # source: superpowers | git
+writing-plans  # source: superpowers
+brainstorming  # source: superpowers

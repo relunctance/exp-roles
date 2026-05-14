@@ -5,6 +5,45 @@
   "type": "object",
   "required": ["name", "display_name", "skills"],
   "additionalProperties": false,
+  "definitions": {
+    "skill_item": {
+      "type": "object",
+      "required": ["name", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "skill 名称",
+          "pattern": "^[a-z0-9][a-z0-9._-]*[a-z0-9]$|^[a-z0-9]$"
+        },
+        "source": {
+          "type": "string",
+          "description": "skill 来源类型",
+          "enum": ["superpowers", "git"],
+          "enumDescriptions": {
+            "superpowers": "来自 Superpowers 生态 (obra/superpowers)，通过 git clone 获取",
+            "git": "来自外部 Git 仓库，需要 url 字段指定仓库地址"
+          }
+        },
+        "url": {
+          "type": "string",
+          "description": "当 source 为 git 时，指定 skill 仓库的 Git 克隆地址",
+          "format": "uri"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "source": { "const": "git" } },
+            "required": ["source"]
+          },
+          "then": {
+            "required": ["url"]
+          }
+        }
+      ]
+    }
+  },
   "properties": {
     "name": {
       "type": "string",
@@ -44,17 +83,13 @@
       "properties": {
         "required": {
           "type": "array",
-          "description": "必须安装的 skills 列表",
-          "items": {
-            "type": "string"
-          }
+          "description": "必须安装的 skills 列表，每个 skill 包含 name、source 和可选的 url",
+          "items": { "$ref": "#/definitions/skill_item" }
         },
         "optional": {
           "type": "array",
-          "description": "可选的 skills 列表",
-          "items": {
-            "type": "string"
-          }
+          "description": "可选的 skills 列表，每个 skill 包含 name、source 和可选的 url",
+          "items": { "$ref": "#/definitions/skill_item" }
         }
       }
     },

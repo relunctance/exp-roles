@@ -1,4 +1,6 @@
-test-driven-development
-writing-plans
-systematic-debugging
-requesting-code-review
+# 必需的 skills 列表
+# 格式: skill-name  # source: superpowers | git
+test-driven-development  # source: superpowers
+writing-plans  # source: superpowers
+systematic-debugging  # source: superpowers
+requesting-code-review  # source: superpowers

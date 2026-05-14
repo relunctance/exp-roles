@@ -52,9 +52,14 @@ attributes:
 
 skills:
   required:
-    - skill-name-1
+    - name: skill-name-1
+      source: superpowers      # superpowers | git
+    - name: skill-name-2
+      source: git
+      url: https://github.com/xxx/skill-repo
   optional:
-    - skill-name-2
+    - name: skill-name-3
+      source: superpowers
 
 applicable_phases:
   - plan
@@ -80,9 +85,12 @@ capabilities:
 在 `roles/my-new-role/required_skills.txt` 中列出必需的 skills：
 
 ```
-superpowers:writing-plans
-superpowers:test-driven-development
+# 格式: skill-name  # source: superpowers | git [url: https://...]
+skill-name-1  # source: superpowers
+skill-name-2  # source: git url: https://github.com/xxx/skill-repo
 ```
+
+> **注意**: source 为 `git` 时必须提供 `url`，`superpowers` 来源的 skill 来自 [Superpowers](https://github.com/obra/superpowers) 生态。
 
 ---
 
@@ -210,10 +218,11 @@ python validators/validate_role.py roles/my-new-role
 
 **A:** 根据角色的**工作方式**和**职责**：
 
-1. 如果角色需要写实现计划 → `writing-plans`
-2. 如果角色需要 TDD → `test-driven-development`
-3. 如果角色需要调试 → `systematic-debugging`
-4. 如果角色需要设计 → `brainstorming`
+1. 如果角色需要写实现计划 → `writing-plans` (source: superpowers)
+2. 如果角色需要 TDD → `test-driven-development` (source: superpowers)
+3. 如果角色需要调试 → `systematic-debugging` (source: superpowers)
+4. 如果角色需要设计 → `brainstorming` (source: superpowers)
+5. 如果 skill 来自外部仓库 → 指定 `source: git` 并提供 `url`
 
 ---
 

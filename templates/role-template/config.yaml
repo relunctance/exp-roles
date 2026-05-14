@@ -8,10 +8,14 @@ attributes:
 
 skills:
   required:
-    - skill-name-1              # 必需的 skills（与 required_skills.txt 保持一致）
-    - skill-name-2
+    - name: skill-name-1       # 必需的 skill（与 required_skills.txt 保持一致）
+      source: superpowers       # superpowers | git
+    - name: skill-name-2
+      source: git
+      url: https://github.com/xxx/skill-repo
   optional:
-    - skill-name-3              # 可选的 skills
+    - name: skill-name-3       # 可选的 skill
+      source: superpowers
 
 applicable_phases:
   - execute                     # plan | design | execute | review | verify | release

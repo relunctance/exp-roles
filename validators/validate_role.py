@@ -6,9 +6,10 @@
 - JSON Schema 格式校验
 - 必需文件完整性校验
 - config.yaml name 与目录名一致性校验
-- config.yaml skills.required 与 required_skills.txt 交叉校验
-- required_skills.txt 格式校验
+- config.yaml skills 与 required_skills.txt 交叉校验
+- required_skills.txt 格式校验（支持 source 注释）
 - SKILL.md 结构校验
+- skill source/url 合法性校验
 """
 
 import json
@@ -18,6 +19,13 @@ from pathlib import Path
 
 import jsonschema
 import yaml
+
+
+# 合法的 source 类型
+VALID_SOURCES = {"superpowers", "git"}
+
+# 需要 url 的 source 类型
+SOURCES_REQUIRING_URL = {"git"}
 
 
 def load_schema(schema_path: Path) -> dict:
@@ -35,24 +43,68 @@ def load_role(role_path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def load_required_skills(role_path: Path) -> set[str] | None:
+def load_required_skills(role_path: Path) -> list[dict] | None:
     """
     加载 required_skills.txt 中的 skill 列表
 
-    过滤空行和 # 注释行，返回去重后的 set。
+    支持格式:
+      skill-name  # source: superpowers
+      skill-name  # source: git url: https://github.com/xxx/skill
+
+    返回 list[dict]，每个 dict 包含 name, source, url(optional)。
     如果文件不存在返回 None。
     """
     skills_file = role_path / "required_skills.txt"
     if not skills_file.exists():
         return None
 
-    skills = set()
+    skills = []
     with open(skills_file, encoding="utf-8") as f:
-        for line in f:
+        for line_num, line in enumerate(f, start=1):
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            skills.add(line)
+
+            # 解析 skill name 和 source 注释
+            skill = {"name": line, "line_num": line_num}
+
+            # 匹配 # source: xxx [url: yyy] 注释
+            comment_match = re.search(r"#\s*source:\s*(\S+)(?:\s+url:\s*(\S+))?\s*$", line)
+            if comment_match:
+                # skill name 是注释前面的部分
+                skill["name"] = line[:comment_match.start()].strip()
+                skill["source"] = comment_match.group(1)
+                if comment_match.group(2):
+                    skill["url"] = comment_match.group(2)
+
+            skills.append(skill)
+
+    return skills if skills else None
+
+
+def parse_skills_from_yaml(role: dict) -> list[dict]:
+    """
+    从 config.yaml 中提取 skills 列表
+
+    返回 list[dict]，每个 dict 包含 name, source, url(optional)。
+    """
+    if not role or not role.get("skills"):
+        return []
+
+    skills = []
+    for category in ("required", "optional"):
+        items = role["skills"].get(category, [])
+        for item in items:
+            if isinstance(item, str):
+                # 兼容旧的纯字符串格式
+                skills.append({"name": item})
+            elif isinstance(item, dict):
+                skill = {"name": item.get("name", "")}
+                if "source" in item:
+                    skill["source"] = item["source"]
+                if "url" in item:
+                    skill["url"] = item["url"]
+                skills.append(skill)
     return skills
 
 
@@ -63,42 +115,74 @@ def validate_skills_txt_format(role_path: Path) -> list[str]:
     检查项：
     - 文件是否为空（无有效 skill）
     - 是否有重复项
-    - 每行格式是否合法（小写字母、数字、连字符、点、下划线）
+    - skill name 格式是否合法
+    - source 注释格式是否合法（如果存在）
+    - git source 是否包含 url
     """
     errors = []
     skills_file = role_path / "required_skills.txt"
     if not skills_file.exists():
         return errors
 
-    skill_pattern = re.compile(r"^[a-z0-9][a-z0-9._-]*[a-z0-9]$|^[a-z0-9]$")
+    skill_name_pattern = re.compile(r"^[a-z0-9][a-z0-9._-]*[a-z0-9]$|^[a-z0-9]$")
 
     with open(skills_file, encoding="utf-8") as f:
         lines = f.readlines()
 
     valid_skills = []
-    seen = set()
+    seen_names = set()
 
     for i, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
 
-        # 跳过空行和注释
+        # 跳过空行和纯注释行
         if not line or line.startswith("#"):
             continue
 
-        # 检查格式
-        if not skill_pattern.match(line):
+        # 分离 skill name 和 source 注释
+        comment_match = re.search(r"#\s*source:\s*(\S+)(?:\s+url:\s*(\S+))?\s*$", line)
+        if comment_match:
+            skill_name = line[:comment_match.start()].strip()
+            source = comment_match.group(1)
+            url = comment_match.group(2)
+        else:
+            skill_name = line
+            source = None
+            url = None
+
+        # 检查 skill name 格式
+        if not skill_name:
             errors.append(
-                f"[required_skills.txt] 第 {i} 行格式不合法: '{line}'，"
+                f"[required_skills.txt] 第 {i} 行: skill name 为空"
+            )
+            continue
+
+        if not skill_name_pattern.match(skill_name):
+            errors.append(
+                f"[required_skills.txt] 第 {i} 行格式不合法: '{skill_name}'，"
                 f"只能包含小写字母、数字、连字符、点和下划线"
             )
 
-        # 检查重复
-        if line in seen:
+        # 检查 source 合法性
+        if source and source not in VALID_SOURCES:
             errors.append(
-                f"[required_skills.txt] 第 {i} 行重复: '{line}'"
+                f"[required_skills.txt] 第 {i} 行 source 不合法: '{source}'，"
+                f"只能是 {sorted(VALID_SOURCES)}"
             )
-        seen.add(line)
-        valid_skills.append(line)
+
+        # 检查 git source 是否有 url
+        if source == "git" and not url:
+            errors.append(
+                f"[required_skills.txt] 第 {i} 行: source 为 git 但缺少 url"
+            )
+
+        # 检查重复
+        if skill_name in seen_names:
+            errors.append(
+                f"[required_skills.txt] 第 {i} 行重复: '{skill_name}'"
+            )
+        seen_names.add(skill_name)
+        valid_skills.append(skill_name)
 
     # 检查是否有至少一个有效 skill
     if not valid_skills:
@@ -128,21 +212,55 @@ def validate_name_consistency(role_path: Path, role: dict) -> list[str]:
 
 def validate_skills_consistency(role_path: Path, role: dict) -> list[str]:
     """
-    校验 config.yaml skills.required 与 required_skills.txt 内容一致性
+    校验 config.yaml skills 与 required_skills.txt 内容一致性
+
+    对比 skills.required 的 skill name 列表与 required_skills.txt 中的 name。
+    同时校验 source 和 url 的一致性。
     """
     errors = []
     if not role or not role.get("skills", {}).get("required"):
         return errors
 
-    yaml_skills = set(role["skills"]["required"])
-    txt_skills = load_required_skills(role_path)
+    # 从 YAML 提取 required skills
+    yaml_skills = role["skills"]["required"]
+    yaml_names = set()
+    yaml_map = {}
 
+    for item in yaml_skills:
+        if isinstance(item, str):
+            name = item
+            source = None
+            url = None
+        elif isinstance(item, dict):
+            name = item.get("name", "")
+            source = item.get("source")
+            url = item.get("url")
+        else:
+            continue
+
+        yaml_names.add(name)
+        yaml_map[name] = {"source": source, "url": url}
+
+    # 从 txt 提取 required skills
+    txt_skills = load_required_skills(role_path)
     if txt_skills is None:
         return errors
 
-    if yaml_skills != txt_skills:
-        missing_in_txt = yaml_skills - txt_skills
-        extra_in_txt = txt_skills - yaml_skills
+    txt_names = set()
+    txt_map = {}
+
+    for skill in txt_skills:
+        name = skill["name"]
+        txt_names.add(name)
+        txt_map[name] = {
+            "source": skill.get("source"),
+            "url": skill.get("url"),
+        }
+
+    # 检查 name 一致性
+    if yaml_names != txt_names:
+        missing_in_txt = yaml_names - txt_names
+        extra_in_txt = txt_names - yaml_names
         if missing_in_txt:
             errors.append(
                 f"[skills] config.yaml 中有但 required_skills.txt 缺少: "
@@ -153,6 +271,18 @@ def validate_skills_consistency(role_path: Path, role: dict) -> list[str]:
                 f"[skills] required_skills.txt 中有但 config.yaml 缺少: "
                 f"{sorted(extra_in_txt)}"
             )
+
+    # 检查 source 一致性（仅对两边都有的 skill）
+    common_names = yaml_names & txt_names
+    for name in common_names:
+        yaml_source = yaml_map[name]["source"]
+        txt_source = txt_map[name]["source"]
+        if yaml_source != txt_source:
+            errors.append(
+                f"[skills] skill '{name}' source 不一致: "
+                f"config.yaml='{yaml_source}', required_skills.txt='{txt_source}'"
+            )
+
     return errors
 
 
@@ -182,12 +312,74 @@ def validate_skill_md_structure(role_path: Path, role: dict) -> list[str]:
     content = skill_file.read_text(encoding="utf-8")
 
     for section in required_sections:
-        # 支持 ## 和 ### 两种标题级别
         pattern = re.compile(rf"^#{{2,3}}\s+.*{re.escape(section)}", re.MULTILINE)
         if not pattern.search(content):
             errors.append(
                 f"[SKILL.md] 缺少必需章节: '{section}'"
             )
+
+    return errors
+
+
+def validate_skill_sources(role: dict) -> list[str]:
+    """
+    校验 config.yaml 中所有 skill 的 source 和 url 合法性
+
+    检查项：
+    - source 值是否合法
+    - source 为 git 时是否提供 url
+    """
+    errors = []
+    if not role or not role.get("skills"):
+        return errors
+
+    for category in ("required", "optional"):
+        items = role["skills"].get(category, [])
+        for i, item in enumerate(items):
+            if isinstance(item, str):
+                # 旧格式：缺少 source 字段
+                errors.append(
+                    f"[skills.{category}] 第 {i + 1} 项 '{item}' 使用了旧格式，"
+                    f"需要改为对象格式并指定 source"
+                )
+                continue
+
+            if not isinstance(item, dict):
+                errors.append(
+                    f"[skills.{category}] 第 {i + 1} 项格式错误，应为对象"
+                )
+                continue
+
+            name = item.get("name", "")
+            source = item.get("source")
+
+            # 检查 source 是否存在
+            if not source:
+                errors.append(
+                    f"[skills.{category}] skill '{name}' 缺少 source 字段"
+                )
+                continue
+
+            # 检查 source 值合法性
+            if source not in VALID_SOURCES:
+                errors.append(
+                    f"[skills.{category}] skill '{name}' source 不合法: '{source}'，"
+                    f"只能是 {sorted(VALID_SOURCES)}"
+                )
+                continue
+
+            # 检查 git source 是否有 url
+            if source == "git" and not item.get("url"):
+                errors.append(
+                    f"[skills.{category}] skill '{name}' source 为 git 但缺少 url"
+                )
+
+            # 检查非 git source 不应有 url
+            if source != "git" and item.get("url"):
+                errors.append(
+                    f"[skills.{category}] skill '{name}' source 为 '{source}' "
+                    f"不应包含 url"
+                )
 
     return errors
 
@@ -231,6 +423,9 @@ def validate_role(role_path: Path, schema_path: Path) -> tuple[bool, list[str]]:
 
     # name 与目录名一致性校验
     errors.extend(validate_name_consistency(role_path, role))
+
+    # skill source/url 合法性校验
+    errors.extend(validate_skill_sources(role))
 
     # skills.required 与 required_skills.txt 一致性校验
     errors.extend(validate_skills_consistency(role_path, role))
