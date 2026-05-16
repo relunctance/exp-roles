@@ -1,4 +1,8 @@
 # Exp Roles
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
+[![version](https://img.shields.io/badge/version--green.svg)]()
+[![category](https://img.shields.io/badge/category--blue.svg)]()
+[![platforms](https://img.shields.io/badge/platforms-hermes-blue.svg)]()
 
 AI Agent 角色定义库 — 与 AI 协同打磨角色，持续进化。
 
